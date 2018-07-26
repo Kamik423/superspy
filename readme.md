@@ -1,9 +1,11 @@
 <p align="center">
-<img src="readme_images/logo.png" style="max-height: 300px;"></br>
+<img src="readme_images/logo.png" style="max-height:200px;"></br>
 <b>S</b>mall <b>U</b>ncomplicated <b>P</b>lugin <b>E</b>xtensible <b>R</b>eliable <b>S</b>hell in <b>PY</b>thon
 </p>
 
 [![PEP8](https://img.shields.io/badge/code%20style-pep8-orange.svg)](https://www.python.org/dev/peps/pep-0008/)
+[![pypiversion](https://img.shields.io/pypi/v/superspy.svg)](https://pypi.org/project/superspy/)
+[![pypipythonversion](https://img.shields.io/pypi/pyversions/superspy.svg)](https://python.org)
 
 # About
 
@@ -79,7 +81,11 @@ If you get it working on an older version please let me know!
 
 ## Installing
 
-TODO installation
+Setup manually from this repository or just type
+
+```bash
+pip3 install superspy
+```
 
 ## Basic usage
 
@@ -251,7 +257,7 @@ The project is licensed under the [MIT-License](license.md).
 * This project uses the module [PluginBase](http://pluginbase.pocoo.org) for loading language syntax python files, which makes my job so much easier.
 * Thank you also to all the people who have supported me in this endeavor.
 
---
+---
 
 Thanks for reading this to the end.
 
