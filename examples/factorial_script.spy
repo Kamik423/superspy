@@ -1,0 +1,16 @@
+printnl "DISASSEMBLE [Y/N]: "
+if getstr == "Y" dis
+
+printnl "COMPUTE FACTORIAL OF: "
+base = getnum
+base_backup = base
+
+factorial = 1
+while base != 0 {
+    factorial = factorial * base
+    base = base - 1
+}
+
+printnl base_backup
+printnl "! = "
+print factorial
