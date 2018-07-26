@@ -23,13 +23,13 @@ SPAM
 [SUPERSPY DEMO] >>>     joke
 [SUPERSPY DEMO] >>>     i = i - 1
 [SUPERSPY DEMO] >>> }
-7.0 to go: Wenn ist das Nunstück git und Slotermeyer?Ja! Beiherhund das Oder die Flipperwaldt gersput!
-6.0 to go: Wenn ist das Nunstück git und Slotermeyer?Ja! Beiherhund das Oder die Flipperwaldt gersput!
-5.0 to go: Wenn ist das Nunstück git und Slotermeyer?Ja! Beiherhund das Oder die Flipperwaldt gersput!
-4.0 to go: Wenn ist das Nunstück git und Slotermeyer?Ja! Beiherhund das Oder die Flipperwaldt gersput!
-3.0 to go: Wenn ist das Nunstück git und Slotermeyer?Ja! Beiherhund das Oder die Flipperwaldt gersput!
-2.0 to go: Wenn ist das Nunstück git und Slotermeyer?Ja! Beiherhund das Oder die Flipperwaldt gersput!
-1.0 to go: Wenn ist das Nunstück git und Slotermeyer?Ja! Beiherhund das Oder die Flipperwaldt gersput!
+7.0 to go: Wenn ist das Nunstück git und Slotermeyer? Ja! Beiherhund das Oder die Flipperwaldt gersput!
+6.0 to go: Wenn ist das Nunstück git und Slotermeyer? Ja! Beiherhund das Oder die Flipperwaldt gersput!
+5.0 to go: Wenn ist das Nunstück git und Slotermeyer? Ja! Beiherhund das Oder die Flipperwaldt gersput!
+4.0 to go: Wenn ist das Nunstück git und Slotermeyer? Ja! Beiherhund das Oder die Flipperwaldt gersput!
+3.0 to go: Wenn ist das Nunstück git und Slotermeyer? Ja! Beiherhund das Oder die Flipperwaldt gersput!
+2.0 to go: Wenn ist das Nunstück git und Slotermeyer? Ja! Beiherhund das Oder die Flipperwaldt gersput!
+1.0 to go: Wenn ist das Nunstück git und Slotermeyer? Ja! Beiherhund das Oder die Flipperwaldt gersput!
 ```
 
 `joke` and `spam` here are funktions easily defined in Python code:
