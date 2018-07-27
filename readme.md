@@ -1,5 +1,5 @@
 <p align="center">
-<img src="readme_images/logo.png" style="max-height:200px;"></br>
+<img src="readme_images/logo.svg"></br>
 <b>S</b>mall <b>U</b>ncomplicated <b>P</b>lugin <b>E</b>xtensible <b>R</b>eliable <b>S</b>hell in <b>PY</b>thon
 </p>
 
