@@ -16,7 +16,7 @@ class Joke(ast.Function):
         funniest_joke_in_the_world (str): The funniest joke in the world.
     """
 
-    funniest_joke_in_the_world = 'Wenn ist das Nunstück git und Slotermeyer?'\
+    funniest_joke_in_the_world = 'Wenn ist das Nunstück git und Slotermeyer? '\
         'Ja! Beiherhund das Oder die Flipperwaldt gersput!'
     def execute(self):
         """Print the funniest joke in the world. Exercise caution.

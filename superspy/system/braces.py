@@ -74,7 +74,6 @@ class Group(ast.Command):
             self.has_built_token_tree = True
             self.sub_ast = ast.SubAst(self.ast)
             self.sub_ast.ast = self.commands
-            self.sub_ast.index_commands()
             self.sub_ast.build_token_tree()
 
     def __repr__(self) -> str:

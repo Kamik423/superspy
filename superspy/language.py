@@ -162,10 +162,17 @@ def register_command_with_pattern(*pattern: List[PATTERN]) -> Any:
                 when matching the pattern.
 
         Returns:
-            Type['ast.Command']: Description
+            Type['ast.Command']: Required for the decorator.
         """
         Language.current.all_commands.append(command_obj)
+
+        priority = command_obj.priority
+        if priority in Language.current.commands_by_priority:
+            Language.current.commands_by_priority[priority].append(command_obj)
+        else:
+            Language.current.commands_by_priority[priority] = [command_obj]
         command_obj.pattern = pattern
+
         return command_obj
 
     return decorator_register
@@ -185,7 +192,7 @@ def register_command(command: Type['ast.Command']) -> Any:
 def register_literality_delimiter(opening: str, closing: str) -> Any:
     """Register a pair of strings delimiting literality, like "".
 
-    So everything inside the delimiters is taken literel, eventhough it
+    So everything inside the delimiters is taken literal, even though it
     might contain things like spaces or even commands.
 
     Args:
@@ -216,7 +223,7 @@ def register_operator(operator: str) -> Any:
         """Inner function.
 
         Args:
-            function_obj (Type['ast.Function']): The class to be instantied
+            function_obj (Type['ast.Function']): The class to be instantiated
                 when matching the operator pattern.
 
         Returns:
@@ -275,6 +282,11 @@ def register_falsy_value(falsy_value: str) -> Any:
     return bounce
 
 
+###########
+# CLASSES #
+###########
+
+
 class Language:
     """An object representing a language including commands and syntax.
 
@@ -290,6 +302,9 @@ class Language:
 
         all_commands (List[Type['ast.Command']]): List of all registered
             commands.
+        commands_by_priority (Dict[float, List[Type['ast.Command']]]): A
+            dictionary that has the priorities (or order of operations) of all
+            commands as keys and the command classes as values.
 
         escape_markers (str): Characters marking to next character to be
             escaped. So for example `\"` does not end the string.
@@ -312,6 +327,7 @@ class Language:
     excluded_plugins: List[str] = []
 
     all_commands: List[Type['ast.Command']] = []
+    commands_by_priority: Dict[float, List[Type['ast.Command']]] = {}
     escape_markers = '\\'
     word_delimiters: List[chr] = []
     regex_matchers: Dict[str, Type['ast.Token']] = {}
@@ -342,13 +358,13 @@ class Language:
                 self.plugin_source.load_plugin(plugin)
 
     def evaluates_as_true(self, statement: str) -> bool:
-        """Return this statement evaluted as True.
+        """Return this statement evaluated as True.
 
         Args:
             statement (str): The statement to be evaluated
 
         Returns:
-            bool: The return statements, True if the statement evalutes as
+            bool: The return statements, True if the statement evaluates as
                 True, False otherwise.
         """
         return statement not in self.falsy_values

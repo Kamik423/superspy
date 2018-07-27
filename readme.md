@@ -176,7 +176,6 @@ The `complete_run` method is an abstraction for something similar to this:
 ```python
 my_ast.build_token_list()
 my_ast.guess_variables()
-my_ast.index_commands()
 my_ast.build_token_tree()
 my_ast.interpret()
 exit_code: int = my_ast.get_exit_code()

@@ -87,7 +87,7 @@ class Disassemble(ast.Command):
     def execute(self):
         """Call the corresponding function in the ast.
         """
-        print(self.ast.root_ast().deep_repr())
+        print(self.ast.runtime.root_ast.deep_repr())
 
     def __repr__(self) -> str:
         return f'DISASSEMBLE'

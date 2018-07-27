@@ -1,4 +1,4 @@
-"""This is the core of superspy; it handels
+"""This is the core of superspy; it handles most of the parsing and execution.
 """
 
 import re
@@ -48,20 +48,22 @@ class ErrorMode(Enum):
 
     Attributes:
         CRASH (TYPE): Crash once an error is encountered. This is the default
-            in general, but should be especially for any execution of premade
+            in general, but should be especially for any execution of pre-made
             code, since correct execution cannot be guaranteed once one line of
             code fails.
         PRINT (TYPE): This one prints the error, but continues execution. It is
             used in the shell, where you don't want the shell to end when you
-            accidentaly type a variable name wrong.
-        SUPPRESS (TYPE): Ingore the error silently and continue executing the
+            accidentally type a variable name wrong.
+        SUPPRESS (TYPE): Ignore the error silently and continue executing the
             code. This one is not used in here anywhere, but can be used by
-            you. Beware however, since this might leed to issues!
+            you. Beware however, since this might lead to issues!
+        MIRROR_PARENT (TYPE): Mirror the parent ast's error mode.
     """
 
     SUPPRESS = auto()
     PRINT = auto()
     CRASH = auto()
+    MIRROR_PARENT = auto()
 
 
 ###########
@@ -177,8 +179,7 @@ class Token:
 class UndefinedToken(Token):
     """A not defined token.
     """
-    # pylint: disable=pointless-statement
-    ...
+    pass
 
 
 class Command(Token, ABC):
@@ -202,9 +203,7 @@ class Command(Token, ABC):
     def execute(self) -> Any:
         """Execute this command.
         """
-        # pylint: disable=pointless-statement
-        # this is an abstract method
-        ...
+        pass
 
     def executes_as_true(self) -> bool:
         """Is the value when executing this command Truthy or Falsy.
@@ -212,7 +211,7 @@ class Command(Token, ABC):
         Returns:
             bool: The return value
         """
-        return self.execute() not in self.ast.lang.falsy_values
+        return self.execute() not in self.ast.runtime.language.falsy_values
 
     @classmethod
     def token_matches_class(cls, token: Token, class_: Type[Token]) -> bool:
@@ -253,8 +252,8 @@ class Command(Token, ABC):
 
         Returns:
             int: The amounts of tokens matched by this pattern. -1 means it did
-                not match sucessfully, while 0 means it matches 0 tokens, which
-                is possible with optionals.
+                not match successfully, while 0 means it matches 0 tokens,
+                which is possible with optionals.
         """
 
         # Amount of tokens to match.
@@ -282,7 +281,7 @@ class Command(Token, ABC):
                 length += 1
             # Does not match the current pattern.
             else:
-                # Optionals still are successfull.
+                # Optionals still are successful.
                 if is_optional:
                     break
                 length = -1
@@ -398,7 +397,7 @@ class Function(Command, ABC):
     priority: float = OrderOfOperations.EXPRESSION
 
     def __init__(self, _: Token, *args: List[Token]):
-        """Set up from the default intializer.
+        """Set up from the default initializer.
 
         Args:
             _ (Token): The function name.
@@ -414,9 +413,7 @@ class Function(Command, ABC):
         """Execute this function. Overwriting it like this is required
         by pylint.
         """
-        # pylint: disable=pointless-statement
-        # this is an abstract method
-        ...
+        pass
 
 
 class Operation(Command, ABC):
@@ -432,7 +429,7 @@ class Operation(Command, ABC):
     right: Command
 
     def __init__(self, left: Command, _: Token, right: Command):
-        """Set up from the default intializer.
+        """Set up from the default initializer.
 
         Args:
             left (Command): The left parameter of the operation.
@@ -448,9 +445,7 @@ class Operation(Command, ABC):
         """Execute this function. Overwriting it like this is required
         by pylint.
         """
-        # pylint: disable=pointless-statement
-        # this is an abstract method.
-        ...
+        pass
 
 
 class DataType(Command, ABC):
@@ -505,8 +500,8 @@ class Variable(Command):
             search_namespace = f'{search_namespace}/{namespace_component}'
             variable_name = f'{search_namespace}.{self.name}'
             # If that variable is found return it.
-            if variable_name in self.ast.variables:
-                return self.ast.variables[variable_name]
+            if variable_name in self.ast.runtime.variables:
+                return self.ast.runtime.variables[variable_name]
         # If the variable is not found throw an error.
         self.ast.error(f'Variable or function {self.name} not found.',
                        self.get_trace())
@@ -525,12 +520,13 @@ class Variable(Command):
             search_namespace = f'{search_namespace}/{namespace_component}'
             variable_name = f'{search_namespace}.{self.name}'
             # If the variable is found set its value.
-            if variable_name in self.ast.variables:
-                self.ast.variables[variable_name] = new_value
+            if variable_name in self.ast.runtime.variables:
+                self.ast.runtime.variables[variable_name] = new_value
                 break
         else:
             # If the variable is not found set a new one.
-            self.ast.variables[f'{search_namespace}.{self.name}'] = new_value
+            self.ast.runtime.variables[
+                f'{search_namespace}.{self.name}'] = new_value
 
     def execute(self) -> Any:
         """If the variable gets executed like a command its value is returned.
@@ -547,60 +543,71 @@ class Variable(Command):
         return f'{indent}VARIABLE {self.name}'
 
 
+class Runtime:
+    """Class that stores runtime data.
+    It has a single instance for a running script.
+
+    Attributes:
+        root_ast (Ast): The root ast of the script.
+        exit_code (optional, int): The exit code of the script.
+        language (language.Language): The language of the script.
+        variables (Dict[str, Any]): The variables in the script.
+        functions (Dict[str, Any]): The functions in the script.
+    """
+
+    root_ast: 'Ast'
+    language: language.Language
+    exit_code: Optional[int] = None
+    variables: Dict[str, Any] = {}
+    functions: Dict[str, Any] = {}
+
+    def __init__(self, root_ast: 'Ast'):
+        """Initialize and set up the Runtime.
+
+        Args:
+            root_ast (Ast): The root ast of the script.
+        """
+        self.root_ast = root_ast
+
+
 class Ast:
-    """The Abstract Syntax Tree doing most of the heavy lifing for the parsing.
+    """The Abstract Syntax Tree doing most of the heavy lifting of the parsing.
     This manages all the parsing and executing of the input.
 
     Attributes:
         ast (List[Token]): The actual abstract syntax tree: A list of tokens.
-            This is a flat list, becauseany depth are the sub tokens of another
-            token.
+            This is a flat list, because any depth are the sub tokens of
+            another token.
         ast_is_definitely_valid_up_to (int): When parsing the AST from a
             continuing input like a shell the AST tries to match at every line.
-            However with assymetric braces it might not yet be valid. This is
+            However with asymmetric braces it might not yet be valid. This is
             the last point the AST is entirely valid at, so the previous part
             does not have to be parsed again.
         lang (language.Language): The language this ast is parsing, matching
             and executing.
         line_number (int): The current line number the ast is parsing at.
-        ranked_commands (Dict[float, List[Type[Command]]]): A list of the
-            commands sorted by order of operations.
         error_mode (ErrorMode): What to do when an error occurs, like crash or
             continue executing.
         source (code_source.CodeSource): The code source for this ast that
             supplies new lines of code.
-        runtime_attributes (Dict[str, Dict[str, Any]]): Runtime attributes of
-            this ast, including variables and functions.
-        variables (Dict[str, Any]): The runtime variables. A child of
-            `runetime_attributes` for convenience.
         execution_index (int): The index the execution is currently at. This
             has to be a nonlocal variable because the shell terminates the
             execution function between lines.
-        _exit_code (int, optional): If not `None` the execution terminates with
-            that exit code.
     """
 
     ast: List[Token] = []
     source: Optional[code_source.CodeSource] = None
-    ranked_commands: Dict[float, List[Type[Command]]] = {}
-    lang: language.Language
     error_mode: ErrorMode = ErrorMode.CRASH
-
-    runtime_attributes: Dict[str, Dict[str, Any]] = {
-        'Variables': {},
-        'Functions': {}
-    }
-
-    variables = runtime_attributes['Variables']
 
     ast_is_definitely_valid_up_to = 0
     line_number = 0
 
     execution_index: int = 0
-    _exit_code: Optional[int] = None
 
-    def __init__(self, source: Optional[code_source.CodeSource],
-                 lang: language.Language):
+    runtime: Optional[Runtime] = None
+
+    def __init__(self, source: Optional[code_source.CodeSource] = None,
+                 lang: Optional[language.Language] = None):
         """Initialize the current AST with a code source and a language.
 
         Args:
@@ -609,15 +616,10 @@ class Ast:
             lang (language.Language): The language this ast matches.
         """
         self.source = source
-        self.lang = lang
-
-    def root_ast(self) -> 'Ast':
-        """The root ast of the code which is used for sub asts.
-
-        Returns:
-            Ast: The root ast.
-        """
-        return self
+        if self.runtime is None:
+            self.runtime = Runtime(self)
+            if language is not None:
+                self.runtime.language = lang
 
     def build_token_list(self, line_count: int = None):
         """Build a flat token list from strings by the code source.
@@ -644,14 +646,14 @@ class Ast:
             if current_word != '':
                 match_class = UndefinedToken
                 # Try to match it to existing tokens.
-                for regex in self.lang.regex_matchers:
-                    token_class = self.lang.regex_matchers[regex]
+                for regex in self.runtime.language.regex_matchers:
+                    token_class = self.runtime.language.regex_matchers[regex]
                     if re.match(regex, current_word):
                         match_class = token_class
                         break
                 # Initialize a new token and set it up.
                 new_token = match_class(self.line_number, current_word)
-                new_token.ast = self.root_ast()
+                new_token.ast = self
                 # Add it to the token list.
                 self.ast.append(new_token)
                 # Reset the current word.
@@ -668,7 +670,7 @@ class Ast:
                 if escape_next:
                     current_word += character
                     escape_next = False
-                elif character in self.lang.escape_markers:
+                elif character in self.runtime.language.escape_markers:
                     escape_next = True
                 elif is_literal and character == literality_closer:
                     is_literal = False
@@ -676,14 +678,17 @@ class Ast:
                     literality_closer = ''
                 elif is_literal:
                     current_word += character
-                elif character in self.lang.literality_delimiter.keys():
-                    literality_closer = self.lang.literality_delimiter[
-                        character]
+                elif character in \
+                        self.runtime.language.literality_delimiter.keys():
+                    literality_closer = \
+                            self.runtime.language.literality_delimiter[
+                                character]
                     is_literal = True
                     current_word += character
-                elif character in self.lang.word_delimiters:
+                elif character in self.runtime.language.word_delimiters:
                     save_current_word()
-                elif character in self.lang.single_character_tokens:
+                elif character in \
+                        self.runtime.language.single_character_tokens:
                     save_current_word()
                     current_word += character
                     save_current_word()
@@ -700,19 +705,8 @@ class Ast:
                 new_var = Variable(token.content)
                 new_var.line_number = token.line_number
                 new_var.content = token.content
-                new_var.ast = self.root_ast()
+                new_var.ast = self
                 self.ast[index] = new_var
-
-    def index_commands(self):
-        """Sort all commands into the order of operations to `ranked_commands`.
-        """
-        distinct_orders_of_operations = set(
-            (command.priority for command in self.lang.all_commands))
-        for distinct_order_of_operations in distinct_orders_of_operations:
-            self.ranked_commands[distinct_order_of_operations] = [
-                command for command in self.lang.all_commands
-                if command.priority == distinct_order_of_operations
-            ]
 
     def build_token_tree(self):
         """Match patterns defined for different commands and create them.
@@ -721,13 +715,15 @@ class Ast:
         # pylint: disable=too-many-locals
         # This is a complex function that belongs together.
         # Spreading it out more would make it less legible.
-        for order_of_operation in sorted(self.ranked_commands.keys()):
+        for order_of_operation in sorted(
+                self.runtime.language.commands_by_priority.keys()):
             # Reverseley walking the list, as to correctly match nested braces
             # and multiple functions.
             current_index = len(self.ast) - 1
             while current_index + 1:
-                for command in self.ranked_commands[order_of_operation]:
-                    command.ast = self.root_ast()
+                for command in self.runtime.language.commands_by_priority[
+                        order_of_operation]:
+                    command.ast = self
                     match = command.match(self.ast[current_index:])
                     breaks_self_matching_rule = False
                     if match and not breaks_self_matching_rule:
@@ -760,7 +756,7 @@ class Ast:
                         # Create new command object and set it up
                         new_object = command(*arguments)
                         new_object.line_number = arguments[0].line_number
-                        new_object.ast = self.root_ast()
+                        new_object.ast = self
                         new_object.children = flat_matched_objects
                         new_object.content = ' '.join(
                             obj.content for obj in flat_matched_objects)
@@ -798,29 +794,13 @@ class Ast:
             deep_repr_string = deep_repr_string.replace('\n\n', '\n')
         return deep_repr_string
 
-    def get_exit_code(self) -> Optional[int]:
-        """Gets the exit code of the syntax tree.
-
-        Returns:
-            Optional[int]: The exit code.
-        """
-        return self._exit_code
-
-    def set_exit_code(self, exit_code: int):
-        """Sets the exit code of the syntax tree.
-
-        Args:
-            exit_code (int): The exit code.
-        """
-        self._exit_code = exit_code
-
     def is_running(self) -> bool:
         """Is the interpreter still running.
 
         Returns:
             bool: The return value.
         """
-        return self.get_exit_code() is None
+        return self.runtime.exit_code is None
 
     def error(self, message: str, trace: str):
         """Cause an error in the syntax tree that might stop execution.
@@ -830,13 +810,28 @@ class Ast:
             message (str): The error message to be displayed.
             trace (str): The trace for the error.
         """
-        if self.error_mode == ErrorMode.CRASH:
+        self.throw_error_with_mode(self.error_mode, message, trace)
+
+    def throw_error_with_mode(self, error_mode: ErrorMode,
+                              message: str, trace: str):
+        """Throw an error with a specified mode.
+
+        Args:
+            error_mode (ErrorMode): The error mode to be executed.
+            message (str): The error message to be displayed.
+            trace (str): The trace for the error.
+        """
+        if error_mode == ErrorMode.CRASH:
             print(f'\033[31m{message}\n\n{trace}\033[0m')
-            self.set_exit_code(1)
-        elif self.error_mode == ErrorMode.PRINT:
+            self.runtime.exit_code = 1
+        elif error_mode == ErrorMode.PRINT:
             print(f'\033[31m{message}\n\n{trace}\033[0m')
-        elif self.error_mode == ErrorMode.SUPPRESS:
+        elif error_mode == ErrorMode.SUPPRESS:
             pass
+        elif error_mode == ErrorMode.MIRROR_PARENT:
+            print(f'\033[31mAN ERROR OCCURRED,\n'
+                  f'BUT ERROR MODE "MIRROR PARENT" IS NOT SUPPORTED\n\n'
+                  f'{message}\n\n{trace}\033[0m')
 
     def interpret(self):
         """Interpret the syntax tree to its end.
@@ -861,7 +856,6 @@ class Ast:
         while 1:
             self.build_token_list(1 if run_after_each_line else None)
             self.guess_variables()
-            self.index_commands()
             self.build_token_tree()
             # print(self.deep_repr())
             if self.is_valid():
@@ -870,7 +864,7 @@ class Ast:
                 print('INVALID SYNTAX\n\n\n', self.deep_repr())
 
             if not self.is_running():
-                return self.get_exit_code() or 0
+                return self.runtime.exit_code or 0
 
             if not run_after_each_line:
                 return 0
@@ -894,16 +888,11 @@ class SubAst(Ast):
             parent_ast (Ast): The parent Ast.
         """
         self.parent_ast = parent_ast
-        super().__init__(None, self.root_ast().lang)
-
-    def get_exit_code(self) -> int:
-        return self.root_ast().get_exit_code()
-
-    def set_exit_code(self, exit_code: int):
-        self.root_ast().set_exit_code(exit_code)
+        self.runtime = self.parent_ast.runtime
+        super().__init__()
 
     def error(self, message: str, trace: str):
-        self.root_ast().error(message, trace)
-
-    def root_ast(self) -> Ast:
-        return self.parent_ast
+        if self.error_mode == ErrorMode.MIRROR_PARENT:
+            self.parent_ast.error(message, trace)
+        else:
+            self.throw_error_with_mode(self.error_mode, message, trace)

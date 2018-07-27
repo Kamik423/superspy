@@ -5,7 +5,7 @@ with open('README.md') as file:
 
 setup(
     name='superspy',
-    version='0.1.1',
+    version='0.2',
     description='Small Uncomplicated Plugin Extensible Reliable Shell in PYthon',
     long_description=long_description,
     url='https://github.com/Kamik423/superspy',

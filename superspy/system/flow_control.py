@@ -60,7 +60,8 @@ class IfCondition(ast.Command):
     def execute(self):
         """Execute the statement, its condition, and possibly its group.
         """
-        if self.ast.lang.evaluates_as_true(self.condition.execute()):
+        if self.ast.runtime.language.evaluates_as_true(
+                self.condition.execute()):
             self.group.execute()
 
     def __repr__(self) -> str:
@@ -122,7 +123,8 @@ class IfElseCondition(ast.Command):
     def execute(self):
         """Execute the statement by executing its condtion and then one group.
         """
-        if self.ast.lang.evaluates_as_true(self.condition.execute()):
+        if self.ast.runtime.language.evaluates_as_true(
+                self.condition.execute()):
             self.group_true.execute()
         else:
             self.group_false.execute()
@@ -228,10 +230,10 @@ class Exit(ast.Command):
     def execute(self):
         """Set the exit code of the ast depending on the argument.
         """
+        exit_code = 0
         if self.exit_code is not None:
-            self.ast.set_exit_code(self.exit_code.execute())
-        else:
-            self.ast.set_exit_code(0)
+            exit_code = self.exit_code.execute()
+        self.ast.runtime.exit_code = exit_code
 
     def __repr__(self) -> str:
         if self.exit_code is not None:
