@@ -7,6 +7,14 @@
 [![pypiversion](https://img.shields.io/pypi/v/superspy.svg)](https://pypi.org/project/superspy/)
 [![pypipythonversion](https://img.shields.io/pypi/pyversions/superspy.svg)](https://python.org)
 
+<!---START--->
+
+<!---PYPI
+![logo](https://raw.githubusercontent.com/Kamik423/superspy/master/readme_images/logo.svg?sanitize=true)
+
+**S**mall **U**ncomplicated **P**lugin **E**xtensible **R**eliable **S**hell in **PY**thon
+PYPI--->
+
 # About
 
 **`SUPERSPY`** is a implementation of a shell and programming language written completely in Python. It is meant as a replacement of the builtin `cmd` module which allows scripting and advanced flow control functions.
@@ -198,6 +206,8 @@ class MyFunction(ast.Function):
 # Rationale
 
 This module was created because I wanted scripting functionality inside the `cmd` module, that was not there. I have also been toying around with creating my own programming language for a few years and never got around to it. But most of all I needed a distraction during the exams this year.
+
+<!---END--->
 
 # Roadmap
 

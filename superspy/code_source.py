@@ -97,7 +97,7 @@ class ShellSource(CodeSource):
             the shell. Should end if a space.
     """
 
-    prompt = '[🕵] '
+    prompt = '[SUPERSPY] '
 
     def next_line(self, is_valid: bool) -> str:
         """Return the next line.
